@@ -16,7 +16,7 @@ K = np.diag([1, 1])
 dt = 1.0/60.0
 
 error_history = []
-method_name = "pinv" # Change to "transpose" or "pinv" or "dls" for subsequent runs
+method_name = "dls" # Change to "transpose" or "pinv" or "dls" for subsequent runs
 
 # Drawing preparation
 fig = plt.figure()
@@ -55,11 +55,11 @@ def simulate(t):
     #dq = J.T @ (K @ err)
     
     # Option 2: Pseudoinverse
-    dq = np.linalg.pinv(J) @ (K @ err)
+    #dq = np.linalg.pinv(J) @ (K @ err)
     
     # Option 3: Damped Least Squares (DLS)
-    #invJ = DLS(J, 0.1)             # damping = 0.1
-    #dq = invJ @ (K @ err)          # Control solution
+    invJ = DLS(J, 0.1)             # damping = 0.1
+    dq = invJ @ (K @ err)          # Control solution
 
     q += dt * dq
     
