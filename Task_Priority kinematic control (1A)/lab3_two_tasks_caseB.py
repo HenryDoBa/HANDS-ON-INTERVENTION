@@ -27,7 +27,7 @@ tt = np.arange(0, Tt, dt) # Simulation time vector
 
 # Save history
 err1_history = []
-err2_history = []
+joint_1_record = []
 time_history = []
 
 # Drawing preparation
@@ -104,7 +104,7 @@ def simulate(t):
 
     # Record error norms for final plotting
     err1_history.append(np.linalg.norm(err1))
-    err2_history.append(np.linalg.norm(err2))
+    joint_1_record.append(abs(q[0, 0]))
     time_history.append(t)
 
     return line, path, point
@@ -114,16 +114,14 @@ animation = anim.FuncAnimation(fig, simulate, np.arange(0, 10, dt),
                                 interval=10, blit=True, init_func=init, repeat=True)
 plt.show()
 
+# Plot error of end-effector and joint 1 position
+t_rec = np.arange(len(err1_history)) * dt # Time vector for recorded joint angles
 plt.figure(figsize=(8, 4))
-plt.plot(time_history, err1_history, label='Error Task 1 (EE)')
-plt.plot(time_history, err2_history, label='Error Task 2 (Joint 1)')
-plt.title('Evolution of Task Errors (CaseB)')
+plt.plot(t_rec, err1_history, label='e1 (end-effector position)')
+plt.plot(t_rec, joint_1_record, label='e2 (joint 1 position)')
+plt.title('Task-Priority (two tasks) - CaseB')
 plt.xlabel('Time [s]')
 plt.ylabel('Error Norm')
 plt.legend()
 plt.grid(True)
 plt.show()
-
-# Save error data to .npy files for later comparison
-np.save('error1_caseB.npy', np.array(err1_history))
-np.save('error2_caseB.npy', np.array(err2_history))
