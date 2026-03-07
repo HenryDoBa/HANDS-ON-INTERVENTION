@@ -73,7 +73,7 @@ def simulate(t):
     #Use Damped Least Squares (DLS)
     J2_star = DLS(J2, damping) 
     dq2 = J2_star @ (K2 @ err2)                 # Joint velocity for Task 2
-    P2 = np.eye(3) - J2_star @ J2               # Null space projector of Task 2 
+    P2 = np.eye(3) - np.linalg.pinv(J2) @ J2    # Null space projector of Task 2 
 
      # TASK 1
     sigma1 = T[-1][0:2, 3].reshape(2, 1)            # Current position of the end-effector
