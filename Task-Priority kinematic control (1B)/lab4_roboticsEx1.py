@@ -163,7 +163,7 @@ class Position2D(Task):
         super().__init__(name, desired)
         # Initialize 2D error vector (x, y)
         self.err = np.zeros((2, 1)) 
-        # Initialize Jacobian; assuming 3 Degrees of Freedom (n=3)
+        # Initialize 2x3 Jacobian for a 3-DOF robot 
         self.J = np.zeros((2, 3))   
 
     def update(self, robot):
@@ -182,7 +182,9 @@ class Position2D(Task):
 class Orientation2D(Task):
     def __init__(self, name, desired):
         super().__init__(name, desired)
+        # Initialize 1D error for orientation (theta)
         self.err = np.zeros((1, 1))
+        # Initialize 1x3 Jacobian for a 3-DOF robot
         self.J = np.zeros((1, 3))
 
     def update(self, robot):
@@ -196,7 +198,6 @@ class Orientation2D(Task):
         self.err = (self.sigma_d - current_ori).reshape(1, 1)
         
         # The Jacobian for orientation corresponds to the angular velocity about the Z-axis (index 5)
-        # Note: Ensure robot.getEEJacobian() returns all 6 rows if orientation is required,
         # as some lab setups might only return a 2xN Jacobian (x, y).
         self.J = robot.getEEJacobian()[5:6, :]
 '''

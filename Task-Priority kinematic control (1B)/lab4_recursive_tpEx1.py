@@ -99,7 +99,33 @@ def simulate(t):
         # Accumulate velocity
         # Update null-space projector
         P = P - np.linalg.pinv(Jbar_i) @ Jbar_i
-        err_tasks.append(np.linalg.norm(err_i))
+
+        # Extract task name for conditional error logging
+        task_name = tasks[i].name.lower()
+        
+        if "position" in task_name and "configuration" not in task_name:
+            # For 2D Position tasks, log the Euclidean norm (magnitude) of the error
+            err_tasks.append(np.linalg.norm(err_i))
+            
+        elif "orientation" in task_name:
+            # For 2D Orientation, the error is typically a single scalar (rotation angle)
+            err_tasks.append(err_i.flatten()[0]) 
+            
+        elif "configuration" in task_name:
+            # Configuration tasks combine position and orientation
+            # Extract the norm of the first two elements (x, y position error)
+            pos_err = np.linalg.norm(err_i[:2])
+            # Extract the third element (theta orientation error)
+            ori_err = abs(err_i[2][0])
+            
+            # Store both separately to allow plotting two distinct lines
+            err_tasks.append(pos_err)
+            err_tasks.append(ori_err)
+            
+        else: 
+            # Default case for JointPosition or other scalar-based tasks
+            # Extracts the scalar value from the error array
+            err_tasks.append(err_i.flatten()[0])
     ###
 
     err_log.append(err_tasks)
@@ -127,16 +153,29 @@ plt.show()
 
 # After closing the simulation window, plot the control errors
 err_log = np.array(err_log)  # Convert the error log list to a numpy array for easy indexing
-plt.figure()
+labels = [task.name for task in tasks]
 
-# Loop through each task to plot its error progression
-for i in range(len(tasks)):
-    # Plotting the norm of the error for task i over time
-    plt.plot(time_log, err_log[:, i], label=tasks[i].name)
+fig2, ax_q = plt.subplots()
 
-plt.xlabel('Time [s]')                # X-axis label
-plt.ylabel('Control Error Norm')      # Y-axis label (magnitude of error)
-plt.legend()                          # Show legend to identify different tasks
-plt.title('Evolution of Task-Priority Control Errors') # Plot title
-plt.grid(True)                        # Enable grid for better readability
-plt.show()                            # Display the final plot
+# Special handling for Configuration2D task (usually has 2 error components: pos and ori)
+if len(tasks) == 1 and "configuration" in tasks[0].name.lower():
+    # If the log has 2 columns for a single configuration task
+    ax_q.plot(time_log, err_log[:, 0], label='End-effector position')
+    ax_q.plot(time_log, err_log[:, 1], label='End-effector orientation')
+else:
+    # Standard plotting for multiple independent tasks
+    # The number of columns in err_log corresponds to the number of tracked errors
+    for i in range(err_log.shape[1]):
+        # Check if we have a corresponding label, otherwise use the last known label
+        task_label = labels[i] if i < len(labels) else labels[-1]
+        # Plot using the format 'e{priority_number} {Task Name}'
+        ax_q.plot(time_log, err_log[:, i], label=f'{task_label}')
+
+# Set plot metadata to match the reference style
+ax_q.set_title('Task-Priority Control Errors')
+ax_q.set_xlabel('Time [s]')
+ax_q.set_ylabel('Error Value')
+ax_q.legend()
+ax_q.grid(True)
+
+plt.show() # Display the final plot
